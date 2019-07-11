@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>雷霆战机</title>
+    <style>
+        *{margin: 0;padding: 0;}
+        ul{list-style: none;}
+        body{
+            background-color: #000;
+        }
+        #wrap{
+            width: 300px;
+            height: 500px;
+            margin: 20px auto;
+            border: 10px solid #fff;
+            background: url("img/bg0.jpg") center/cover;
+        }
+        #box.animate{
+            animation: run 8s linear infinite;
+        }
+        @keyframes run{
+            0%{
+                background-position: 0 0;
+            }
+            100%{
+                background-position: 0 768px;
+            }
+        }
+        #box{
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }
+        h1{
+            padding-top: 60px;
+            text-shadow:0 0 4px white,    
+                0 -5px 4px #ff3,   
+                2px -10px 6px #fd3,   
+                -2px -15px 11px #f80,   
+                2px -25px 18px #f20; 
+        }
+        #box .option{
+            width: 150px;
+            height: 30px;
+            margin: 60px auto 0;
+            line-height: 30px;
+            font-weight: bold;
+            background-color: rgba(255,255,255,.3);
+            cursor: pointer;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #fff;
+        }
+        #box img{
+            position: absolute;
+        }
+        #box .score{
+            position: absolute;
+            left: 0;
+            top:0;
+            color: #fff;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        #box .overbox{
+            width: 80%;
+            height: 90%;
+            position: absolute;
+            top:0;
+            bottom:0;
+            left:0;
+            right: 0;
+            margin: auto;
+            background-color: #fff;
+        }
+        #box .overbox h2{
+            margin-top: 50px;
+        }
+        #box .overbox p{
+            margin-top: 50px;
+            font-weight: bold;
+            font-size: 24px;
+        }
+        #box .start{
+            width: 70%;
+            height: 40px;
+            text-align: center;
+            line-height: 40px;
+            background-color: #000;
+            color: #fff;
+            font-weight: bold;
+            margin: 80px auto 0;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="wrap">
+        <div id="box"></div><!--战场盒子-->
+    </div>
+    <script>
+        let oBox = document.getElementById("box")
+        //初始化页面
+        init()
+        function init(){
+            //创建初始页面选项
+            let h1 = document.createElement("h1")
+                h1.innerHTML = "雷霆战机1.0版本"
+                oBox.appendChild(h1)
+            let optionArr = ["简单模式","中级模式","困难模式","变态模式"]
+            for(let i=0;i<optionArr.length;i++){
+                let oDiv = document.createElement("div")
+                    oDiv.innerHTML = optionArr[i]
+                    oDiv.className = "option"
+                    oDiv.option = i //等级序号
+                    oDiv.onclick = function(){//每个选项添加店家事件 进入不同等级
+                        startGame(this.option)
+                    }
+                    oBox.appendChild(oDiv)
+            }
+        }
+        //游戏部分
+        function startGame(option){
+            oBox.innerHTML = "" //清空初始页面
+            oBox.style.backgroundImage = `url(img/bg${option+1}.jpg)`
+            oBox.className = "animate"
+            createScore()//创建分数
+            let plane = ownAir(option) //启动我军
+            enemyAir(option,plane)//启动敌军
+            //开启背景音乐
+            let audio = document.createElement("audio")
+                audio.src = "music/game_music.mp3"
+                audio.autoplay = true
+                audio.loop = true
+                oBox.appendChild(audio)
+        }
+
+        //我军生成
+        function ownAir(option){
+            let ownPlane = document.createElement("img")
+                ownPlane.src = 'img/plane_1.png'
+                ownPlane.style.width = 60+'px'
+                ownPlane.style.height = 60+'px'
+                ownPlane.style.top = oBox.offsetHeight - 60 + 'px'
+                ownPlane.style.left = oBox.offsetWidth/2 - 30 + 'px'
+                oBox.appendChild(ownPlane)
+
+                //我军移动
+                let maxTop = oBox.offsetHeight - 60
+                let maxLeft = oBox.offsetWidth - 60
+                let arrBool = []
+                    document.onkeydown = function(e){//键盘按下的时候 同时监听一个状态
+                        arrBool[e.keyCode] = true
+                        arrBool[37] && ownPlane.offsetLeft>0 && (ownPlane.style.left = ownPlane.offsetLeft - 20 +'px')
+                        arrBool[38] && ownPlane.offsetTop>0 && (ownPlane.style.top = ownPlane.offsetTop - 20+'px')
+                        arrBool[39] && ownPlane.offsetLeft<maxLeft && (ownPlane.style.left = ownPlane.offsetLeft + 20+'px')
+                        arrBool[40] && ownPlane.offsetTop<maxTop && (ownPlane.style.top = ownPlane.offsetTop + 20+'px')
+                    }
+                    document.onkeyup = function(e){//按键抬起时 状态消失掉
+                        arrBool[e.keyCode] = false
+                    }
+
+                    //我军子弹生成
+                    let arrTime = [500,400,300,200]//根据等级来生成子弹间隔
+                    setInterval(function(){
+                        let biu = document.createElement('img')
+                            biu.src = 'img/fire.png'
+                            biu.className = "biu"
+                            biu.style.width = 30 + 'px'
+                            biu.style.height = 30 + 'px'
+                            biu.style.top = ownPlane.offsetTop - 30 + 'px'
+                            biu.style.left = ownPlane.offsetLeft+ 15 + 'px'
+                            oBox.appendChild(biu)
+
+                            //子弹飞
+                            biuFly()
+                            function biuFly(){
+                                biu.style.top = biu.offsetTop - 8 +'px'
+                                if(biu.offsetTop<0){
+                                    oBox.removeChild(biu)
+                                }else{
+                                    ownPlane.parentNode && (biu.timer = requestAnimationFrame(biuFly))
+                                }
+                            }
+                    },arrTime[option])
+                    return ownPlane //我军提出来
+        }
+        //敌军生成
+        function enemyAir(option,plane){
+            let arrTime = [500,400,300,200] //根据不同等级来生成飞机速度
+            let oScore = oBox.getElementsByClassName("score")[0]//获取计分板
+            //敌军生成动画
+            oBox.enemyAirTime =  setInterval(function(){
+                let enemyPlane = document.createElement("img")//创建敌军图片标签
+                    enemyPlane.src = 'img/enemy_small.png'
+                    enemyPlane.style.width = 40 +'px'
+                    enemyPlane.style.height = 40 + 'px'
+                    enemyPlane.style.top = 0
+                    enemyPlane.style.left = Math.random()*260 + 'px'
+                    oBox.appendChild(enemyPlane)//敌军投入战场
+                let speed = Math.random()*5+2 //随机速度
+                    enemyDown()
+                    function enemyDown(){//敌军下落
+                        enemyPlane.style.top = enemyPlane.offsetTop + speed +'px'
+                        if(enemyPlane.offsetTop >= 460 ){
+                            oBox.removeChild(enemyPlane)
+                        }else{
+                            let aBiu = oBox.getElementsByClassName("biu")//获取生成的子弹
+                            for(let i=0;i<aBiu.length;i++){
+                                if(isCollision(aBiu[i],enemyPlane)){//敌军下落检测子弹
+                                    //console.log("碰到了")
+                                    oBox.score += 1 //计分板
+                                    oScore.innerHTML = oBox.score
+                                    Boom(enemyPlane,0)//敌军爆炸效果
+                                    cancelAnimationFrame(aBiu[i].timer)
+                                    oBox.removeChild(enemyPlane)//删除被打中的飞机
+                                    oBox.removeChild(aBiu[i])//删除子弹
+                                    return false //避免敌军击落之后 后续下降动画代码执行
+                                }
+                            }
+                            if(plane.parentNode && isCollision(plane,enemyPlane)){//检测敌军我军的碰撞
+                                Boom(plane,1)//我军爆炸处理
+                                clearInterval(oBox.enemyAirTime)//清除敌军生成
+                                oBox.removeChild(enemyPlane)
+                                oBox.removeChild(plane)
+                                return false
+                            }
+                            plane.parentNode && requestAnimationFrame(enemyDown)
+                        }
+                    }
+            },arrTime[option])
+        }
+        //检测碰撞 返回布尔值来判断
+        function isCollision(obj,enemy){
+            //碰撞情况分析
+            //我军位置发生碰撞的情况
+            let Top1 = obj.offsetTop
+            let Bottom1 = obj.offsetTop + parseFloat(obj.style.height)
+            let Left1 = obj.offsetLeft
+            let Right1 = obj.offsetLeft + parseFloat(obj.style.width)
+            //敌军的位置
+            let Bottom2 = enemy.offsetTop + parseFloat(enemy.style.height)
+            let Top2 = enemy.offsetTop
+            let Right2 = enemy.offsetLeft + parseFloat(enemy.style.width)
+            let Left2 = enemy.offsetLeft
+
+            if(Top1>Bottom2 || Left1>Right2 || Bottom1<Top2 || Right1<Left2){//只要都满足的情况就没有碰到
+                return false
+            }else{
+                return true
+            }
+        }
+    
+        //爆炸效果
+        function Boom(obj,i){
+            //obj爆炸对象位置要获取 i是一个爆炸效果的赛选
+            let boomArr = ['img/boom_small.png','img/boom_big.png']
+            let img = document.createElement("img")
+                img.src = boomArr[i]
+                img.style.width = obj.style.width
+                img.style.height = obj.style.height
+                img.style.top = obj.offsetTop+'px'
+                img.style.left = obj.offsetLeft + 'px'
+                oBox.appendChild(img)
+                setTimeout(function(){
+                    img.parentNode && oBox.removeChild(img)
+                    if(i===1){//当我军死亡 游戏结束
+                        gameover()
+                    }
+                },300)
+        }
+        
+        //计算分数
+        function createScore(){
+                oBox.score = 0
+            let div = document.createElement("div")
+                div.className = "score"
+                oBox.appendChild(div)
+        }
+        
+        //游戏结束
+        function gameover(){
+            oBox.innerHTML = "" //情况战场
+            oBox.className = ""
+            oBox.style.backgroundImage = ""
+            let overBox = document.createElement("div")
+                overBox.className = "overbox"
+                overBox.innerHTML = `<h2>GAME OVER</h2><p>得分:${oBox.score}</p>`
+                oBox.appendChild(overBox)
+            let gameStart = document.createElement("div")
+                gameStart.className = "start"
+                gameStart.innerHTML = "再来一次"
+                gameStart.onclick = function(){
+                    oBox.innerHTML = ""
+                    init()
+                }
+                overBox.appendChild(gameStart)
+        }
+    </script>
+</body>
+</html>
